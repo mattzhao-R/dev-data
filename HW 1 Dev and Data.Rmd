@@ -14,12 +14,16 @@ library(tidyverse)
 
 ## a)
 
+In the Solow Growth Model, firms face the problem $$\max_{K_{t},L_{t}} F(K_{t},L_{t})-w_{t} L_{t} - R_{t}K_{t}$$
+where they are trying to choose the amount of capital ($K_{t}$) and labor ($L_{t}$) that maximizes their profit. Profit here is decomposed into revenue (price of 1 per good times amount of goods produced $F(K_{t},L_{t})$) less cost (cost of labor is wage times amount of labor used $w_{t} L_{t}$ and cost of capital is rent times amount of capital used $R_{t}K_{t}$). 
 
 ## b)
 
+Households supply labor inelastically and save a fraction of their income $s$ (determined exogenously) while consuming the rest. 
 
 ## c)
 
+Capital increases at a decreasing rate over time, eventually converging to a steady state level. The reason for this is that assuming you start at a level of capital below the steady state, each period $t$ the level of capital increases via saving a portion of the period's output while the level decreases due to the current amount This is based on the law of motion of capital $K_{t+1} = I_t + (1-\delta)K_t$ where $I_t = sF(K_t, L_t)$. What this law is saying 
 
 ## a)
 
