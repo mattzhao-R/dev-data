@@ -19,27 +19,46 @@ where they are trying to choose the amount of capital ($K_{t}$) and labor ($L_{t
 
 ## b)
 
-Households supply labor inelastically and save a fraction of their income $s$ (determined exogenously) while consuming the rest. 
+Households supply labor inelastically and save a fraction of their income $s$ (determined exogenously) while consuming the rest. This means they make no decisions. 
 
 ## c)
 
-Capital increases at a decreasing rate over time, eventually converging to a steady state level. The reason for this is that assuming you start at a level of capital below the steady state, each period $t$ the level of capital increases via saving a portion of the period's output while the level decreases due to the current amount This is based on the law of motion of capital $K_{t+1} = I_t + (1-\delta)K_t$ where $I_t = sF(K_t, L_t)$. What this law is saying 
+Capital increases at a decreasing rate over time, eventually converging to a steady state level (assuming you start at a level of capital lower than the steady state). This is based on the law of motion of capital $K_{t+1} = I_t + (1-\delta)K_t$ where $I_t = sF(K_t, L_t)$. What this law is saying is that for each period $t$, the level of capital increases via saving a portion of the period's output while the level decreases due to a portion of the current amount of capital depreciating. 
+
+The level of capital increases at a decreasing rate because as the level of capital increases, a larger amount of capital depreciates each period because total depreciation is a fixed proportion of the current level of capital. Additionally, as depreciation rises, the amount of new capital falls since the marginal product of capital falls as the level of capital increases (diminishing marginal returns). Eventually, the amount of new capital per period will equal the amount of capital depreciating per period, with this level of capital being called the steady state. 
+
+
+$$Y_t = K_{t}^{\frac{1}{3}}L_{t}^{\frac{2}{3}}$$
+
 
 ## a)
 
+$K_{t+1} = I_t + (1-\delta)K_t$ 
+
+$I_t = sF(K_t,L_t) \Rightarrow K_{t+1} = sF(K_t,L_t) + (1-\delta)K_t$
 
 ## b)
-
+$K_{t+1} = sF(K_t,L_t) + (1-\delta)K_t$, dividing both sides by $L_t$ results in 
+$k_{t+1} = sf(k_t) + (1-\delta)k_t$
 
 ## c)
+Steady state is where $k_{t+1} = k_t$:
 
+$k_{t+1} = sf(k_t) + (1-\delta)k_t = k_t$
+
+$sf(k_t) + (1-\delta)k_t = k_t \Rightarrow sf(k_t)=\delta k_t$
+
+$sf(k_t)=\delta k_t \Rightarrow \frac{s}{\delta} = \frac{k_t}{f(k_t)} \Rightarrow \frac{0.4}{0.05} = \frac{k_t}{k_t^{\frac{1}{3}}} \Rightarrow 8 = k_t^{\frac{2}{3}} \Rightarrow k_{ss} = 22.62742$
 
 ## d)
 
+![Law of Motion](./HW 1 Q1d.png)
+
+Countries that start with a level of capital above the steady state fall to the steady state level of capital while those starting below see their capital increase to the steady state. Both eventually converge.
 
 ## e)
 
-
+Since the steady state is expressed as $k_{ss} = (\frac{s}{\delta})^{\frac{3}{2}}$, if the savings rate for LICs is lower than that of HICs, convergence still occurs but each group of countries converges to their own steady states. Assuming the depreciation rate and production function for these countries is the same and same as before, $k_{ss} = 2.828427$ for LICs and $k_{ss} = 22.62742$. Both sets of countries converge to steady state but LICs converge faster to a much lower steady state while it takes longer for HICs to converge but to a higher steady state (assuming both start at the same level of capital). In general, converge will take different amounts of time for countries in different groups. 
 
 # Q2
 
@@ -47,61 +66,94 @@ Capital increases at a decreasing rate over time, eventually converging to a ste
 
 ### a)
 
+Health care, education, property rights. 
 
 ### b)
 
+While economic growth generally can alleviate poverty, they find that poverty can often times remain high even in countries with growth since growth generally does not mean everyone shares equally in it. As such, Page and Pande argue that redistribution is necessary to increase the speed of poverty reduction. However, they state that traditional methods of redistribution such as cash transfers or physical infrastructure are not enough, illustrating how these methods either fail to help everyone out of poverty or are not sustainable. This leads into their argument that "invisible infrastructure" such as healthcare, education, payment systems, robust institutions, etc. are necessary to ensure that people can be sustainably lifted out of poverty and break intra and inter generational poverty. 
+ 
 
 ## Mankiw, Romer, and Weil (1992) - MRW)
 
 ### c)
 
+A potential danger of sample selection in this context is that data is typically more available from richer countries since they are more likely to collect information about the measures used in the paper. Subsequently, the paper may overestimate the usefulness of human capital in explaining growth since rich countries that are more likely to appear in the dataset also are more likely to be investing in human capital, confounding the actual estimate of human capital's impact on growth in the augmented Solow Model. 
 
 ### d)
 
+There are no confounding variables that affect both income per capita and the covariates listed. This seems unlikely. Even with the addition of human capital it seems unlikely.
 
 ### e)
 
+No, they add up to more than 121. This means that some countries are used in regressions for multiple groups. Since this is the case, my interpretation of the regressions is different since the fact that coefficients between the Non-oil and Intermediate groups are similar could be due to the fact that their samples share countries rather than actual similarities between the growth fundamentals of each group. 
 
 ## Kremer, Willis, and You (2021) - KWY
 
 ### f)
 
+KWY find that while in the past it appeared that countries in different groups were diverging, these groups were actually conditionally converging to their own steady states. Furthermore, as the correlates of growth in these groups converged to those of higher income nations, they began to see absolute convergence among all countries. Hence, these groups conditionally converged to absolute convergence. 
 
 # Q3
 
-## 1)
+## Setup
 
-### a)
+### 1 and 2)
+
+```{r}
+dev_ind <- read.csv('./pset1_data/development_indicators.csv')
+clf <- read.csv('./pset1_data/classifications.csv')
+```
+```{r}
+df <- left_join(dev_ind,clf,by='countrycode')
+```
+
+### 3)
+
+```{r}
+df <- df %>% 
+  mutate(LMIC_ind = if_else(str_detect(tolower(income_level),'low') |
+                              str_detect(tolower(income_level),'lower') |
+                              str_detect(tolower(income_level),'middle'),1,0))
+```
+
+## Tables and Figures
+
+### 1)
+
+```{r message=F}
+df %>% 
+  filter((year == 2015) & (!is.na(gdp_growth))) %>%
+  group_by(income_level) %>%
+  summarise(mean_GDPgrowth = mean(gdp_growth),
+            sd_GDPgrowth = sd(gdp_growth))
+```
+
+**ADD INTERPRETATION**
+
+### 2)
 
 
-### b)
+
+### 3)
 
 
+### 4)
 
-## 2)
-
-
-
-## 3)
+### 5)
 
 
-## 4)
+### 6)
 
-## 5)
-
-
-## 6)
-
-### a)
+#### a)
 
 
-### b)
+#### b)
 
 
-## 7)
+### 7)
 
 
-## 8)
+### 8)
 
 
 
