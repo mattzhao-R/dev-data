@@ -1,0 +1,103 @@
+---
+title: "PSET 1 Dev and Data"
+author: "Matthew Zhao"
+date: "2022-10-09"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Q1
+
+## a)
+
+
+## b)
+
+
+## c)
+
+
+## a)
+
+
+## b)
+
+
+## c)
+
+
+## d)
+
+
+## e)
+
+
+
+# Q2
+
+## Page and Pande (2018)
+
+### a)
+
+
+### b)
+
+
+## Mankiw, Romer, and Weil (1992) - MRW)
+
+### c)
+
+
+### d)
+
+
+### e)
+
+
+## Kremer, Willis, and You (2021) - KWY
+
+### f)
+
+
+# Q3
+
+## 1)
+
+### a)
+
+
+### b)
+
+
+
+## 2)
+
+
+
+## 3)
+
+
+## 4)
+
+## 5)
+
+
+## 6)
+
+### a)
+
+
+### b)
+
+
+## 7)
+
+
+## 8)
+
+
+
