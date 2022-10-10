@@ -118,7 +118,7 @@ df <- df %>%
 
 ## Tables and Figures
 
-### 1)
+### 4)
 
 ```{r message=F}
 df %>% 
@@ -128,29 +128,86 @@ df %>%
             sd_GDPgrowth = sd(gdp_growth))
 ```
 
-**ADD INTERPRETATION**
-
-### 2)
-
-
-
-### 3)
-
-
-### 4)
+Mean GDP growth does not provide clear separation of groups of countries, since high income countries have higher average growth than low income nations, but lower middle has higher average growth than upper middle. This lack of separation in growth levels between country groups is further supported by the high standard deviation in GDP growth in 2015, with standard deviation being similar to or larger than the mean values. 
 
 ### 5)
 
+```{r}
+df_5 <- df %>%
+  pivot_wider(id_cols = c(countryname.x,LMIC_ind),
+              names_from = year,
+              names_prefix = 'gdp_growth',
+              values_from = gdp_growth) %>%
+  na.omit()
+df_5_LMIC <- df_5 %>%
+  filter(LMIC_ind==1)
+```
+```{r fig.dim=c(5,5), out.width='60%', fig.align='center'}
+ggplot(data=df_5,mapping=aes(x=gdp_growth1990,y=gdp_growth2015)) + 
+  geom_point(size = 1, position = position_jitter()) +
+  geom_abline(slope=1,intercept=0, alpha = 0.6, linetype='dashed') + 
+  geom_hline(yintercept = 0, alpha=0.7) +
+  geom_vline(xintercept = 0, alpha=0.7) + 
+  theme_light() + ggtitle("Comparing 1990 and 2015 GDP Growth (Full Sample)") +
+  xlab("GDP Growth 1990 (%)") + ylab("GDP Growth 2015 (%)") +
+  coord_fixed(xlim=c(-15,15), ylim=c(-15,15)) +
+  theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
+        axis.title.x = element_text(family = 'serif', size = 10),
+        axis.title.y = element_text(family = 'serif', size = 10))
+```
+
+```{r fig.dim=c(5,5), out.width='60%', fig.align='center'}
+ggplot(data=df_5_LMIC,mapping=aes(x=gdp_growth1990,y=gdp_growth2015)) + 
+  geom_point(size = 1, position = position_jitter()) +
+  geom_abline(slope=1,intercept=0, alpha = 0.6, linetype='dashed') + 
+  geom_hline(yintercept = 0, alpha=0.7) +
+  geom_vline(xintercept = 0, alpha=0.7) + 
+  theme_light() + ggtitle("Comparing 1990 and 2015 GDP Growth (LMIC)") +
+  xlab("GDP Growth 1990 (%)") + ylab("GDP Growth 2015 (%)") +
+  coord_fixed(xlim=c(-15,15), ylim=c(-15,15)) +
+  theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
+        axis.title.x = element_text(family = 'serif', size = 10),
+        axis.title.y = element_text(family = 'serif', size = 10))
+```
+
+If a country is above the 45 degree line, it means that their GDP growth has increased compared to 1990, If they are below the line, then their GDP growth has decreased since 1990.
 
 ### 6)
 
+```{r message=F}
+df_6a <- df %>% 
+  filter(!is.na(enroll_primary_t)) %>%
+  group_by(year,income_level) %>%
+  summarise(primary = mean(enroll_primary_t),.groups='keep')
+```
+
+```{r fig.dim=c(7,5), out.width='60%', fig.align='center'}
+ggplot(data=df_6a,mapping=aes(x=year,y=primary,color=income_level)) +
+  geom_line() +
+  theme_light() + ggtitle("Different Trends in Primary School Enrollment") +
+  xlab("Year") + ylab("Total Primary School Enrollment (%)") +
+  coord_fixed(ylim=c(50,100)) +
+  theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
+        axis.title.x = element_text(family = 'serif', size = 10),
+        axis.title.y = element_text(family = 'serif', size = 10),
+        legend.title =element_text(family = 'serif', size = 10),
+        legend.text =element_text(family = 'serif', size = 10)) +
+  scale_color_manual(values=c("#070071", "#6EE1FF", "#38A0FA",'#385DFA'),
+                     name='Income Group',
+                     limits = c("High Income","Upper Middle Income",
+                                "Lower Middle Income","Low Income"))
+```
+
 #### a)
 
+While high and upper middle income stayed roughly the same, low and lower middle income increased then fell after 2010, potentially due to the financial crisis in 2008. In general, it appears that total primary school enrollment is correlated with income level since the enrollment percentage order is the same as income group order
 
 #### b)
 
+We cannot say for sure that total primary school enrollment is correlated with income level since we only know the income level as of 2019. Prior data points such as 1990 could have had countries in different income levels. As such, we can only say that countries that are wealthier now have higher levels of primary school enrollment than countries that are poorer now.
 
 ### 7)
+
 
 
 ### 8)
