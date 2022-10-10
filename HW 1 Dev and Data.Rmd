@@ -181,15 +181,14 @@ df_6a <- df %>%
   summarise(primary = mean(enroll_primary_t),.groups='keep')
 ```
 
-```{r fig.dim=c(7,5), out.width='60%', fig.align='center'}
+```{r fig.dim=c(5,4), out.width='75%', fig.align='center'}
 ggplot(data=df_6a,mapping=aes(x=year,y=primary,color=income_level)) +
   geom_line() +
   theme_light() + ggtitle("Different Trends in Primary School Enrollment") +
   xlab("Year") + ylab("Total Primary School Enrollment (%)") +
-  coord_fixed(ylim=c(50,100)) +
   theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
-        axis.title.x = element_text(family = 'serif', size = 10),
-        axis.title.y = element_text(family = 'serif', size = 10),
+        axis.title = element_text(family = 'serif', size = 10),
+        axis.text = element_text(family = 'serif',size=8),
         legend.title =element_text(family = 'serif', size = 10),
         legend.text =element_text(family = 'serif', size = 10)) +
   scale_color_manual(values=c("#070071", "#6EE1FF", "#38A0FA",'#385DFA'),
@@ -212,5 +211,34 @@ We cannot say for sure that total primary school enrollment is correlated with i
 
 ### 8)
 
+```{r}
+df_8 <- df %>%
+  pivot_longer(cols = c(enroll_second_m,enroll_secondary_f),
+               names_to = 'gender',
+               values_to='enroll_sec') %>%
+  select(income_level,gender,enroll_sec,LMIC_ind,gdp_growth,gdp_percap)
+```
+```{r fig.dim=c(6,4), out.width='75%', fig.align='center'}
+df_8_bar <- df_8 %>%
+  filter(!is.na(enroll_sec))
+ggplot(data = df_8_bar, 
+       mapping = aes(x=factor(
+         income_level,c("High Income","Upper Middle Income",
+                        "Lower Middle Income","Low Income")), 
+                     y=enroll_sec, fill=gender)) +
+  geom_col(position = 'dodge',width = 0.5) + 
+  theme_light() + ggtitle("Gender Gap in Secondary Enrollment") +
+  xlab("Income Level") + ylab("Secondary School Enrollment") +
+  theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
+        axis.title = element_text(family = 'serif', size = 10),
+        axis.text = element_text(family = 'serif',size=8),
+        legend.title =element_text(family = 'serif', size = 10),
+        legend.text =element_text(family = 'serif', size = 10)) +
+  scale_fill_manual(values=c("#070071", "#38A0FA"),
+                     name='Gender',
+                     labels = c("Male","Female"))
+```
+  
 
+```
 
