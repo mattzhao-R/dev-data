@@ -207,6 +207,28 @@ We cannot say for sure that total primary school enrollment is correlated with i
 
 ### 7)
 
+```{r}
+df_7 <- df %>%
+  select(year,countrycode,gdp_percap,enroll_primary_t) %>%
+  na.omit() %>%
+  group_by(year) %>%
+  mutate(quant = factor(cut(gdp_percap,quantile(gdp_percap, probs = seq(0, 1, 1/10)),include.lowest=TRUE,labels=FALSE))) %>%
+  group_by(year,quant) %>%
+  summarise(primary=mean(enroll_primary_t),.groups='keep') #%>%
+  #mutate(diff = primary - lag(primary,1))
+```
+```{r fig.dim=c(5,4), out.width='75%', fig.align='center'}
+ggplot(data=df_7,mapping=aes(x=year,y=primary,color=quant)) +
+  geom_line() +
+  theme_light() + ggtitle("Different Trends in Primary School Enrollment") +
+  xlab("Year") + ylab("Total Primary School Enrollment (%)") +
+  theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
+        axis.title = element_text(family = 'serif', size = 10),
+        axis.text = element_text(family = 'serif',size=8),
+        legend.title =element_text(family = 'serif', size = 10),
+        legend.text =element_text(family = 'serif', size = 10))
+```
+
 
 
 ### 8)
@@ -240,5 +262,5 @@ ggplot(data = df_8_bar,
 ```
   
 
-```
+
 
