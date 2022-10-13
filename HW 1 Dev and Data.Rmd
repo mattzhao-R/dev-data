@@ -15,7 +15,7 @@ library(tidyverse)
 ## a)
 
 In the Solow Growth Model, firms face the problem $$\max_{K_{t},L_{t}} F(K_{t},L_{t})-w_{t} L_{t} - R_{t}K_{t}$$
-where they are trying to choose the amount of capital ($K_{t}$) and labor ($L_{t}$) that maximizes their profit. Profit here is decomposed into revenue (price of 1 per good times amount of goods produced $F(K_{t},L_{t})$) less cost (cost of labor is wage times amount of labor used $w_{t} L_{t}$ and cost of capital is rent times amount of capital used $R_{t}K_{t}$). 
+where they are trying to choose the amount of capital ($K_{t}$) and labor ($L_{t}$) that maximizes their profit. Profit here is decomposed into revenue (price of 1 per good times amount of goods produced as determined by the production function $F(K_{t},L_{t})$) less cost (cost of labor is wage times amount of labor used $w_{t} L_{t}$ and cost of capital is rent times amount of capital used $R_{t}K_{t}$). 
 
 ## b)
 
@@ -39,7 +39,7 @@ $I_t = sF(K_t,L_t) \Rightarrow K_{t+1} = sF(K_t,L_t) + (1-\delta)K_t$
 
 ## b)
 $K_{t+1} = sF(K_t,L_t) + (1-\delta)K_t$, dividing both sides by $L_t$ results in 
-$k_{t+1} = sf(k_t) + (1-\delta)k_t$
+$k_{t+1} = sy_t + (1-\delta)k_t$
 
 ## c)
 Steady state is where $k_{t+1} = k_t$:
@@ -54,7 +54,7 @@ $sf(k_t)=\delta k_t \Rightarrow \frac{s}{\delta} = \frac{k_t}{f(k_t)} \Rightarro
 
 ![Law of Motion](./HW 1 Q1d.png)
 
-Countries that start with a level of capital above the steady state fall to the steady state level of capital while those starting below see their capital increase to the steady state. Both eventually converge.
+Countries that start with a level of capital above the steady state fall to the steady state level of capital since depreciation is higher than new capital via investment while those starting below see their capital increase to the steady state since the opposite is true. Both eventually converge.
 
 ## e)
 
@@ -66,7 +66,7 @@ Since the steady state is expressed as $k_{ss} = (\frac{s}{\delta})^{\frac{3}{2}
 
 ### a)
 
-Health care, education, property rights. 
+Access to health care, access to education, property rights. 
 
 ### b)
 
@@ -81,11 +81,11 @@ A potential danger of sample selection in this context is that data is typically
 
 ### d)
 
-There are no confounding variables that affect both income per capita and the covariates listed. This seems unlikely. Even with the addition of human capital it seems unlikely.
+Formally, we would need to assume that treatment conditioning on our observed covariates is independent of unobserved factors such as institutions or culture (Selection on Observables). In this context, the "treatment" and outcome relate to how the data and specifically coefficients fit the Solow model since we are trying to see how much growth can be explained via the variables in the model. This assumption is not plausible, even when including human capital since there are still most likely unobserved determinants that affect both the "treatment" and outcome. 
 
 ### e)
 
-No, they add up to more than 121. This means that some countries are used in regressions for multiple groups. Since this is the case, my interpretation of the regressions is different since the fact that coefficients between the Non-oil and Intermediate groups are similar could be due to the fact that their samples share countries rather than actual similarities between the growth fundamentals of each group. 
+**CHECK AGAIN** No, they add up to more than 121. This means that some countries are used in regressions for multiple groups. Since this is the case, my interpretation of the regressions is different since the fact that coefficients between the Non-oil and Intermediate groups are similar could be due to the fact that their samples share countries rather than actual similarities between the growth fundamentals of each group. 
 
 ## Kremer, Willis, and You (2021) - KWY
 
@@ -215,7 +215,7 @@ df_7 <- df %>%
   mutate(quant = factor(cut(gdp_percap,quantile(gdp_percap, probs = seq(0, 1, 1/10)),include.lowest=TRUE,labels=FALSE))) %>%
   group_by(year,quant) %>%
   summarise(primary=mean(enroll_primary_t),.groups='keep') #%>%
-  #mutate(diff = primary - lag(primary,1))
+  #mutate(diff = lag(primary,1))
 ```
 ```{r fig.dim=c(5,4), out.width='75%', fig.align='center'}
 ggplot(data=df_7,mapping=aes(x=year,y=primary,color=quant)) +
@@ -260,7 +260,5 @@ ggplot(data = df_8_bar,
                      name='Gender',
                      labels = c("Male","Female"))
 ```
-  
 
-
-
+We see that at all income levels except low, we see that female secondary school enrollment is greater than male. This could be indicative of potential social or cultural barriers to education facing those specifically in low income nations, as mentioned in Page and Pande (2018). 
