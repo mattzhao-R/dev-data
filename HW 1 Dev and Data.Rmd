@@ -71,9 +71,9 @@ Access to health care, access to education, property rights.
 ### b)
 
 While economic growth generally can alleviate poverty, they find that poverty can often times remain high even in countries with growth since growth generally does not mean everyone shares equally in it. As such, Page and Pande argue that redistribution is necessary to increase the speed of poverty reduction. However, they state that traditional methods of redistribution such as cash transfers or physical infrastructure are not enough, illustrating how these methods either fail to help everyone out of poverty or are not sustainable. This leads into their argument that "invisible infrastructure" such as healthcare, education, payment systems, robust institutions, etc. are necessary to ensure that people can be sustainably lifted out of poverty and break intra and inter generational poverty. 
- 
 
-## Mankiw, Romer, and Weil (1992) - MRW)
+
+## Mankiw, Romer, and Weil (1992) - MRW
 
 ### c)
 
@@ -85,7 +85,7 @@ Formally, we would need to assume that treatment conditioning on our observed co
 
 ### e)
 
-**CHECK AGAIN** No, they add up to more than 121. This means that some countries are used in regressions for multiple groups. Since this is the case, my interpretation of the regressions is different since the fact that coefficients between the Non-oil and Intermediate groups are similar could be due to the fact that their samples share countries rather than actual similarities between the growth fundamentals of each group. 
+No, they add up to more than 121. This does not affect our interpretation because MRW are running regressions on specific subsets of the data (with the latter two being subsets of the first), meaning that we would just interpret each regression based on the specific country subset/sample as described earlier in the paper.
 
 ## Kremer, Willis, and You (2021) - KWY
 
@@ -210,12 +210,14 @@ We cannot say for sure that total primary school enrollment is correlated with i
 ```{r}
 df_7 <- df %>%
   select(year,countrycode,gdp_percap,enroll_primary_t) %>%
-  na.omit() %>%
+  group_by(countrycode) %>%
+  mutate(diff = enroll_primary_t - lag(enroll_primary_t)) %>% 
+  filter(!is.na(diff)) %>%
   group_by(year) %>%
-  mutate(quant = factor(cut(gdp_percap,quantile(gdp_percap, probs = seq(0, 1, 1/10)),include.lowest=TRUE,labels=FALSE))) %>%
+  mutate(quant = factor(cut(gdp_percap,quantile(gdp_percap, probs = seq(0, 1, 1/4),na.rm=T),include.lowest=TRUE,labels=FALSE))) %>%
+  filter(!is.na(quant)) %>%
   group_by(year,quant) %>%
-  summarise(primary=mean(enroll_primary_t),.groups='keep') #%>%
-  #mutate(diff = lag(primary,1))
+  summarise(primary=mean(diff),.groups='keep') 
 ```
 ```{r fig.dim=c(5,4), out.width='75%', fig.align='center'}
 ggplot(data=df_7,mapping=aes(x=year,y=primary,color=quant)) +
@@ -229,7 +231,7 @@ ggplot(data=df_7,mapping=aes(x=year,y=primary,color=quant)) +
         legend.text =element_text(family = 'serif', size = 10))
 ```
 
-
+No, we see similar trends with the lowest income nations seeing the largest gains while the higher income countries stay relatively similar.
 
 ### 8)
 
