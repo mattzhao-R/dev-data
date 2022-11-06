@@ -8,12 +8,14 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r}
+```{r, warnings=F, messages=F}
 library(tidyverse)
 library(haven)
 library(broom)
 library(ggplot2)
 library(fixest)
+library(stargazer)
+options(scipen=999)
 ```
 
 # Q1
@@ -41,4 +43,133 @@ savings_df <- savings_dta %>%
                                    0,
                                    literate_swahili))
 ```
+```{r}
+bal_controls = c(
+     "wave1",
+     "wave2",
+     "wave3",
+     'bg_boda',  
+     'bg_age'  ,
+     'bg_married',  
+     'bg_num_children',  
+     'bg_educ',  
+     'literate_swahili',
+     'bg_rosca',  
+     'bg_rosca_contrib_lyr',  
+     'bg_animalsvalue',  
+     'bg_totalinc_lastweek',  
+     'bg_loan_bank',  
+     'bg_loan_friend',  
+     'bg_healthstatus',  
+     'per_hard_save',  
+     'per_invest_choice2',  
+     'per_somewhat_patient',  
+     'per_time_consistent',  
+     'per_pat_now_impat_later',  
+     'per_maximpat',  
+     'per_fwd_digit_score2',  
+     'per_ravens_matrix',  
+     'bg_durvalue_hh',  
+     'per_hyperbolic'  
+)
+```
+```{r}
+temp <- savings_df %>% 
+  drop_na(treatment,filled_log) %>% 
+  mutate_if(is.numeric, ~replace_na(.,mean(., na.rm = TRUE))) %>%
+  group_by(bg_gender,treatment) %>%
+  summarise_at(bal_controls, mean) %>% ungroup() %>%
+  mutate(bg_gender = ifelse(bg_gender==0,'Female','Male'),
+         treatment = ifelse(treatment==0,'Control','Treatment'),
+         name = paste(treatment,bg_gender,sep=', ')) %>%
+  select(name,!c(bg_gender,treatment)) %>%
+  column_to_rownames(var='name')
+sum_means <- as.data.frame(t(temp))
 
+temp <- savings_df %>% 
+  drop_na(treatment,filled_log) %>% 
+  mutate_if(is.numeric, ~replace_na(.,mean(., na.rm = TRUE))) %>%
+  group_by(bg_gender,treatment) %>%
+  summarise_at(bal_controls, sd) %>% ungroup() %>%
+  mutate(bg_gender = ifelse(bg_gender==0,'f','m'),
+         treatment = ifelse(treatment==0,'c','t'),
+         grps = paste(treatment,bg_gender,sep='_')) %>%
+  select(!c(bg_gender,treatment)) %>%
+  column_to_rownames(var='grps')
+sum_sd <- as.data.frame(t(temp)) %>%
+  mutate(f_sd = abs(c_f-t_f),
+         m_sd = abs(c_m-t_m)) %>%
+  select(!c(c_f,t_f,c_m,t_m))
+smy <- cbind(sum_means,sum_sd)
+```
+```{r}
+q2 <- smy %>% rowwise() %>%
+  mutate(pval_diff_female =
+           pt(((`Control, Female`-`Treatment, Female`)/f_sd),
+              nrow(savings_df %>% 
+  drop_na(treatment,filled_log)),lower.tail = F),
+         pval_diff_male =
+           pt(((`Control, Male`-`Treatment, Male`)/m_sd),
+              nrow(savings_df %>% 
+  drop_na(treatment,filled_log)),lower.tail = F))
+```
+
+## Q3
+
+This is an issue since significant p values mean that our treatment group may systematically differ from our control group, meaning that these significantly different variables could be potential confounders that prevent us from saying if the effect of treatment is causal or not. 
+
+## Q4
+
+```{r fig.dim=c(5,4), out.width='75%', fig.align='center'}
+# first6_num_trans_savings, 
+q4 <- savings_df %>%
+  filter(treatment == 1) %>%
+  drop_na(treatment,first6_num_trans_savings) %>%
+  select(first6_num_trans_savings)
+ggplot(q4, aes(x=first6_num_trans_savings)) +
+  geom_histogram() + theme_light() + 
+  ggtitle("Transactions in First Six Months") +
+  xlab("Number of Transactions") + ylab("Count") +
+  theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
+        axis.title = element_text(family = 'serif', size = 10),
+        axis.text = element_text(family = 'serif',size=8))
+```
+
+### Q4a)
+
+The authors include controls because individuals have different baseline characteristics as we saw in Q2/Q3 which could affect our estimate of the treatment effect if we don't account for them. 
+
+### Q4b)
+
+The summation term is summing the strata variables and interactions between year, gender indicator, and bodas indicator across years, capturing the total cumulative effect of different strata on the response.
+
+### Q4c)
+
+```{r}
+outcome_variables = c(
+    "active",
+    "bank_savings",
+    "animal_savings",
+    "rosca_contrib"
+)
+models <- list()
+q4c <- savings_df %>%
+  drop_na(treatment,bg_gender,bg_boda,bg_malevendor,
+          bg_femalevendor,wave2,wave3)
+vars <- 'treatment + bg_gender + bg_boda + bg_malevendor +
+            bg_femalevendor + bg_educ + wave2 + bg_gender*wave2 +
+            bg_gender*wave2*bg_boda + wave3 +
+            bg_gender*wave3 +
+            bg_gender*wave3*bg_boda'
+for (i in 1:length(outcome_variables)){
+  m <- lm(paste(outcome_variables[i], '~', vars),data=q4c)
+  models[i] <- m
+}
+# m1 <- lm(paste('active ~', vars),data=q4c)
+# m2 <- lm(paste('bank_savings ~', vars),data=q4c)
+# m3 <- lm(paste('animal_savings ~', vars),data=q4c)
+# m4 <- lm(paste('rosca_contrib ~', vars),data=q4c)
+stargazer(models,type='text',digits=2,
+          dep.var.labels=outcome_variables,out='q4c.txt',
+          title='Table 2: Impacts on Savings',keep = c(1))
+```
