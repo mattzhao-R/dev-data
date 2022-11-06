@@ -1,0 +1,44 @@
+---
+title: "PSET 2 Dev and Data"
+author: "Matthew Zhao"
+date: "11/5/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(haven)
+library(broom)
+library(ggplot2)
+library(fixest)
+```
+
+# Q1
+
+Access to savings accounts could promote longer term savings for more capital intensive projects/investments in their own businesses by creating a place where they can safely save their profits for a longer period. 
+
+# Q2
+
+```{r}
+savings_dta <- read_dta("pset2_data/dataset_savings.dta")
+
+savings_df <- savings_dta %>%
+  mutate(active = ifelse(first6_num_trans_savings > 1, TRUE, FALSE),
+         treatment_bg_boda = treatment*bg_boda,
+         active_bg_boda = active*bg_boda,
+         bg_boda_wave2 = (bg_boda & wave2),
+         bg_malevendor_wave2 = (bg_malevendor & wave2),
+         bg_malevendor_wave3 = (bg_malevendor & wave3),
+         treament_bg_malevendor = treatment*bg_malevendor,
+         active_bg_malevendor = active*bg_malevendor,
+         literate_swahili = ifelse((bg_kis_read == 1 & bg_kis_write ==1),
+                                   1,
+                                   NA),
+         literate_swahili = ifelse((bg_kis_read ==0 | bg_kis_write == 0), 
+                                   0,
+                                   literate_swahili))
+```
+
