@@ -8,7 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r, warnings=F, messages=F}
+```{r, warning=F, message=F}
 library(tidyverse)
 library(haven)
 library(broom)
@@ -74,44 +74,31 @@ bal_controls = c(
 )
 ```
 ```{r}
-temp <- savings_df %>% 
-  drop_na(treatment,filled_log) %>% 
+longer_stats <- savings_df %>%
+  drop_na(treatment,filled_log) %>%
   mutate_if(is.numeric, ~replace_na(.,mean(., na.rm = TRUE))) %>%
-  group_by(bg_gender,treatment) %>%
-  summarise_at(bal_controls, mean) %>% ungroup() %>%
+  select(bg_gender,treatment,all_of(bal_controls)) %>%
+  pivot_longer(cols=bal_controls,
+               names_to='name',values_to='value')
+grp_means <- longer_stats %>%
+  group_by(bg_gender,treatment,name) %>%
+  summarise(means = mean(value),
+            .groups='keep') %>%
   mutate(bg_gender = ifelse(bg_gender==0,'Female','Male'),
-         treatment = ifelse(treatment==0,'Control','Treatment'),
-         name = paste(treatment,bg_gender,sep=', ')) %>%
-  select(name,!c(bg_gender,treatment)) %>%
-  column_to_rownames(var='name')
-sum_means <- as.data.frame(t(temp))
-
-temp <- savings_df %>% 
-  drop_na(treatment,filled_log) %>% 
-  mutate_if(is.numeric, ~replace_na(.,mean(., na.rm = TRUE))) %>%
-  group_by(bg_gender,treatment) %>%
-  summarise_at(bal_controls, sd) %>% ungroup() %>%
-  mutate(bg_gender = ifelse(bg_gender==0,'f','m'),
-         treatment = ifelse(treatment==0,'c','t'),
-         grps = paste(treatment,bg_gender,sep='_')) %>%
-  select(!c(bg_gender,treatment)) %>%
-  column_to_rownames(var='grps')
-sum_sd <- as.data.frame(t(temp)) %>%
-  mutate(f_sd = abs(c_f-t_f),
-         m_sd = abs(c_m-t_m)) %>%
-  select(!c(c_f,t_f,c_m,t_m))
-smy <- cbind(sum_means,sum_sd)
-```
-```{r}
-q2 <- smy %>% rowwise() %>%
-  mutate(pval_diff_female =
-           pt(((`Control, Female`-`Treatment, Female`)/f_sd),
-              nrow(savings_df %>% 
-  drop_na(treatment,filled_log)),lower.tail = F),
-         pval_diff_male =
-           pt(((`Control, Male`-`Treatment, Male`)/m_sd),
-              nrow(savings_df %>% 
-  drop_na(treatment,filled_log)),lower.tail = F))
+         treatment = ifelse(treatment==0,'Control','Treatment')) %>%
+  pivot_wider(names_from=c(treatment,bg_gender),values_from=means,
+              names_sep=', ')
+pvals <- longer_stats %>%
+  group_by(bg_gender,name) %>%
+  summarise(pval = t.test(value ~ treatment)$p.value,
+            .groups='keep') %>%
+  mutate(bg_gender = ifelse(bg_gender==0,
+                            'pval_diff_female',
+                            'pval_diff_male')) %>%
+  pivot_wider(names_from=bg_gender,values_from=pval)
+smy <- left_join(grp_means,pvals,by='name')
+smy <- smy[match(bal_controls,smy$name),]
+write_csv(smy,file='./pset2_outputs/table1.csv')
 ```
 
 ## Q3
@@ -121,13 +108,12 @@ This is an issue since significant p values mean that our treatment group may sy
 ## Q4
 
 ```{r fig.dim=c(5,4), out.width='75%', fig.align='center'}
-# first6_num_trans_savings, 
 q4 <- savings_df %>%
   filter(treatment == 1) %>%
   drop_na(treatment,first6_num_trans_savings) %>%
   select(first6_num_trans_savings)
 ggplot(q4, aes(x=first6_num_trans_savings)) +
-  geom_histogram() + theme_light() + 
+  geom_histogram(binwidth = 1) + theme_light() + 
   ggtitle("Transactions in First Six Months") +
   xlab("Number of Transactions") + ylab("Count") +
   theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
@@ -145,31 +131,34 @@ The summation term is summing the strata variables and interactions between year
 
 ### Q4c)
 
-```{r}
+```{r mylatextable, results = "asis"}
 outcome_variables = c(
     "active",
-    "bank_savings",
-    "animal_savings",
-    "rosca_contrib"
+    "bank\\_savings",
+    "animal\\_savings",
+    "rosca\\_contrib"
 )
-models <- list()
 q4c <- savings_df %>%
   drop_na(treatment,bg_gender,bg_boda,bg_malevendor,
-          bg_femalevendor,wave2,wave3)
-vars <- 'treatment + bg_gender + bg_boda + bg_malevendor +
-            bg_femalevendor + bg_educ + wave2 + bg_gender*wave2 +
-            bg_gender*wave2*bg_boda + wave3 +
-            bg_gender*wave3 +
-            bg_gender*wave3*bg_boda'
-for (i in 1:length(outcome_variables)){
-  m <- lm(paste(outcome_variables[i], '~', vars),data=q4c)
-  models[i] <- m
-}
-# m1 <- lm(paste('active ~', vars),data=q4c)
-# m2 <- lm(paste('bank_savings ~', vars),data=q4c)
-# m3 <- lm(paste('animal_savings ~', vars),data=q4c)
-# m4 <- lm(paste('rosca_contrib ~', vars),data=q4c)
-stargazer(models,type='text',digits=2,
-          dep.var.labels=outcome_variables,out='q4c.txt',
-          title='Table 2: Impacts on Savings',keep = c(1))
+          wave2,wave3)
+vars <- 'treatment + bg_gender + bg_boda + bg_malevendor + bg_educ + wave2 + bg_gender*wave2 + bg_gender*wave2*bg_boda + wave3 + bg_gender*wave3 + bg_gender*wave3*bg_boda'
+m1 <- lm(paste('active ~', vars),data=q4c)
+m2 <- lm(paste('bank_savings ~', vars),data=q4c)
+m3 <- lm(paste('animal_savings ~', vars),data=q4c)
+m4 <- lm(paste('rosca_contrib ~', vars),data=q4c)
+models <- list(m1,m2,m3,m4)
+table2 <- stargazer(models,type='latex',digits=2,dep.var.labels=outcome_variables,
+          title='Table 2: Impacts on Savings',keep = c('treatment'),header=F,suppress.errors = T)
 ```
+
+## Q5)
+
+Taking the coefficients at face value, being offered access to a bank account was associated with being 41% more likely to use a bank account on average, an average increase of 9.36 Ksh in average daily amount deposited into a bank account, an average increase of 16.79 in average daily purchases of animals, and an average increase of 7.81 KSH in average daily amount deposited into ROSCA. 
+
+The effect of offering access to bank accounts on savings is significant when measured by all except ROSCA contributions, with active bank account usage and bank savings significant at the 1% level and animal savings at the 10% level. 
+
+## Q6)
+
+$\beta_2$ measures the average effect associated with being offered access to a bank account on our response of choice. $\beta_2 + \gamma_2$ measures the average effect associated with being offered access to a bank account on our response of choice controlling for if the respondent is a male market vendor i.e. treatment effect for male market vendors/interaction of gender. $\beta_2 + \delta_2$ measures the average effect associated with being offered access to a bank account on our response of choice controlling for if the respondent is a *boda* i.e. treatment effect for bodas. 
+
+
