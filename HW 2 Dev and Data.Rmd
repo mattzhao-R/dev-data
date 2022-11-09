@@ -140,8 +140,9 @@ outcome_variables = c(
 )
 q4c <- savings_df %>%
   drop_na(treatment,bg_gender,bg_boda,bg_malevendor,
-          wave2,wave3)
-vars <- 'treatment + bg_gender + bg_boda + bg_malevendor + bg_educ + wave2 + bg_gender*wave2 + bg_gender*wave2*bg_boda + wave3 + bg_gender*wave3 + bg_gender*wave3*bg_boda'
+          wave2,wave3,bg_rosca_contrib_lyr,bg_married,bg_num_children,bg_age,bg_kis_read,
+          bg_kis_write,filled_log)
+vars <- 'treatment + bg_gender + bg_boda + bg_malevendor + bg_rosca_contrib_lyr + bg_married + bg_num_children + bg_age + bg_kis_read + bg_kis_write + filled_log + wave2 + bg_gender*wave2 + bg_gender*wave2*bg_boda + wave3 + bg_gender*wave3 + bg_gender*wave3*bg_boda'
 m1 <- lm(paste('active ~', vars),data=q4c)
 m2 <- lm(paste('bank_savings ~', vars),data=q4c)
 m3 <- lm(paste('animal_savings ~', vars),data=q4c)
