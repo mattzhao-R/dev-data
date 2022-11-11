@@ -15,12 +15,9 @@ library(broom)
 library(ggplot2)
 library(fixest)
 library(stargazer)
+library(xtable)
 options(scipen=999)
 ```
-
-# Q1
-
-Access to savings accounts could promote longer term savings for more capital intensive projects/investments in their own businesses by creating a place where they can safely save their profits for a longer period. 
 
 # Q2
 
@@ -98,12 +95,12 @@ pvals <- longer_stats %>%
   pivot_wider(names_from=bg_gender,values_from=pval)
 smy <- left_join(grp_means,pvals,by='name')
 smy <- smy[match(bal_controls,smy$name),]
-write_csv(smy,file='./pset2_outputs/table1.csv')
+q2_tab <- xtable(smy)
+align(q2_tab) <- xalign(q2_tab)
+display(q2_tab) <- xdisplay(q2_tab)
+print(q2_tab, include.rownames=FALSE)
 ```
 
-## Q3
-
-This is an issue since significant p values mean that our treatment group may systematically differ from our control group, meaning that these significantly different variables could be potential confounders that prevent us from saying if the effect of treatment is causal or not. 
 
 ## Q4
 
@@ -119,19 +116,20 @@ ggplot(q4, aes(x=first6_num_trans_savings)) +
   theme(plot.title = element_text(family = 'serif', hjust = 0.5, size = 12), 
         axis.title = element_text(family = 'serif', size = 10),
         axis.text = element_text(family = 'serif',size=8))
+ggsave(filename = 'q4_hist.png',
+           path = 
+             "pset2_outputs",
+           device = "png",
+           width = 15,
+           height = 12,
+           limitsize = FALSE,
+           dpi = 300,
+           units = "cm")
 ```
-
-### Q4a)
-
-The authors include controls because individuals have different baseline characteristics as we saw in Q2/Q3 which could affect our estimate of the treatment effect if we don't account for them. 
-
-### Q4b)
-
-The summation term is summing the strata variables and interactions between year, gender indicator, and bodas indicator across years, capturing the total cumulative effect of different strata on the response.
 
 ### Q4c)
 
-```{r mylatextable, results = "asis"}
+```{r table2_odd, results = "asis"}
 outcome_variables = c(
     "active",
     "bank\\_savings",
@@ -152,14 +150,55 @@ table2 <- stargazer(models,type='latex',digits=2,dep.var.labels=outcome_variable
           title='Table 2: Impacts on Savings',keep = c('treatment'),header=F,suppress.errors = T)
 ```
 
-## Q5)
+## Q7)
 
-Taking the coefficients at face value, being offered access to a bank account was associated with being 41% more likely to use a bank account on average, an average increase of 9.36 Ksh in average daily amount deposited into a bank account, an average increase of 16.79 in average daily purchases of animals, and an average increase of 7.81 KSH in average daily amount deposited into ROSCA. 
+```{r table2_even, results = "asis"}
+vars <- 'treatment + treatment*bg_boda + treatment*bg_malevendor + bg_gender + bg_boda + bg_malevendor + bg_rosca_contrib_lyr + bg_married + bg_num_children + bg_age + bg_kis_read + bg_kis_write + filled_log + wave2 + bg_gender*wave2 + bg_gender*wave2*bg_boda + wave3 + bg_gender*wave3 + bg_gender*wave3*bg_boda'
+m1 <- lm(paste('active ~', vars),data=q4c)
+m2 <- lm(paste('bank_savings ~', vars),data=q4c)
+m3 <- lm(paste('animal_savings ~', vars),data=q4c)
+m4 <- lm(paste('rosca_contrib ~', vars),data=q4c)
+models <- list(m1,m2,m3,m4)
+table2 <- stargazer(models,type='latex',digits=2,
+                    dep.var.labels=outcome_variables,title='Table 2: Impacts on Savings',
+                    keep=c('treatment','treatment:bg_boda'),
+                    header=F,suppress.errors = T)
+```
 
-The effect of offering access to bank accounts on savings is significant when measured by all except ROSCA contributions, with active bank account usage and bank savings significant at the 1% level and animal savings at the 10% level. 
+## Q8)
 
-## Q6)
+```{r table5, results = "asis"}
+cov1 <- c('bg_femalevendor','bg_malevendor','wave2','wave3')
+cov2 <- c('bg_educ','literate_swahili','bg_age','bg_married','female_married',
+          'malevendor_married','rosca_contribK','bg_animalsvalue',
+          'bg_durvalue_hh')
+cov3 <- c('per_invest_choice2','per_somewhat_patient','per_hyperbolic',
+          'per_pat_now_impat_later','per_maximpat','per_missing')
 
-$\beta_2$ measures the average effect associated with being offered access to a bank account on our response of choice. $\beta_2 + \gamma_2$ measures the average effect associated with being offered access to a bank account on our response of choice controlling for if the respondent is a male market vendor i.e. treatment effect for male market vendors/interaction of gender. $\beta_2 + \delta_2$ measures the average effect associated with being offered access to a bank account on our response of choice controlling for if the respondent is a *boda* i.e. treatment effect for bodas. 
+q8 <- savings_df %>% 
+  filter(treatment == 1 & !is.na(inlogs)) %>% 
+  rowwise() %>%
+  mutate(lntotalplus1 = log(1 + first6_dep_savings),
+         female_married = ifelse(bg_gender==0,1,0) * bg_married,
+         malevendor_married = bg_malevendor * bg_married,
+         rosca_contribK = bg_rosca_contrib_lyr/1000,
+         bg_animalsvalue = bg_animalsvalue/1000,
+         bg_durvalue_hh = bg_durvalue_hh/1000,
+         per_missing = ifelse(
+           is.na(per_invest_choice2) | is.na(per_somewhat_patient) |
+             is.na(per_hyperbolic) | is.na(per_pat_now_impat_later) | 
+             is.na(per_maximpat),1,0)) %>%
+  select(lntotalplus1,all_of(cov1),all_of(cov2),all_of(cov3))
 
+m1 <- lm(paste('lntotalplus1 ~', 
+               paste(cov1,collapse='+')),data=q8)
+m2 <- lm(paste('lntotalplus1 ~', 
+               paste(c(cov1,cov2),collapse='+')),data=q8)
+m3 <- lm(paste('lntotalplus1 ~', 
+               paste(c(cov1,cov2,cov3),collapse='+')),data=q8)
+models <- list(m1,m2,m3)
+table2 <- stargazer(models,type='latex',digits=2,
+                    dep.var.labels=c('Log (1+total deposited in Ksh)'),
+                    title='Table 5-Determinants of Account Usage Within Six Months of Account Opening')
+```
 
