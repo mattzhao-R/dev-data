@@ -1,0 +1,54 @@
+---
+title: "HW 3 Dev and Data"
+author: "Matthew Zhao"
+date: "2022-11-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ivreg)
+library(fixest)
+library(ivmodel)
+```
+
+```{r}
+simulate_data = function(N_observations,
+                         N_instruments,
+                         beta_instrument,
+                         beta_confounder,
+                         seed){
+    set.seed(seed)
+    Z = matrix(
+        rnorm(n = N_observations*N_instruments, mean = 0, sd = 1),
+        nrow = N_observations,
+        ncol = N_instruments
+    )
+    beta_instrument_vector = matrix(beta_instrument, nrow = N_instruments, ncol = 1)
+    confounder = matrix(rnorm(n = N_observations, mean = 0, sd = 1))
+    X_endog = rnorm(n = N_observations, mean = 0, sd = 1) + beta_confounder*confounder + Z %*% beta_instrument_vector
+
+    Y = 5 + 3*X_endog -2*confounder + rnorm(n = N_observations, mean = 0, sd = 1)
+
+    colnames(Z) = paste0("Z_", 1:N_instruments)
+    df = tibble(
+        Y = Y[, 1],
+        X = X_endog[, 1]
+    ) %>%
+    bind_cols(
+        as_tibble(Z)
+    )
+    return(df)
+}
+
+sim_df = simulate_data(
+    N_observations = 1000,
+    N_instruments = 1,
+    beta_instrument = 0,
+    beta_confounder = 0,
+    seed = 111296
+)
+```
+
+
