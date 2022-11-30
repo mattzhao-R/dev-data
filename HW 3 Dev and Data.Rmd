@@ -1,6 +1,6 @@
 ---
 title: "HW 3 Dev and Data"
-author: "Matthew Zhao"
+author: "Matthew Zhao and Matthew Benavides"
 date: "2022-11-27"
 output: pdf_document
 ---
@@ -11,6 +11,8 @@ library(tidyverse)
 library(ivreg)
 library(fixest)
 library(ivmodel)
+library(stargazer)
+options(scipen=999)
 ```
 
 ```{r}
@@ -52,3 +54,55 @@ sim_df = simulate_data(
 ```
 
 
+## Q1
+
+```{r}
+m1 = lm(data=sim_df,formula = Y ~ X)
+stargazer(m1,type='latex',digits=3,dep.var.labels=c('Y'),
+          header=F,suppress.errors = T)
+```
+
+## Q2
+
+```{r}
+weak_sim_df = simulate_data(
+    N_observations = 1000,
+    N_instruments = 200,
+    beta_instrument = 0,
+    beta_confounder = -2,
+    seed = 111296
+)
+```
+
+```{r}
+m2 = lm(data=weak_sim_df,formula = Y ~ X)
+stargazer(m2,type='latex',digits=3,dep.var.labels=c('Y'),
+          header=F,suppress.errors = T)
+```
+
+## Q3
+
+```{r}
+znames = paste0("Z_", 1:200)
+m3 = lm(data=weak_sim_df,formula = paste('X ~ ',
+                                         paste(znames, collapse= "+")))
+stargazer(m3,type='latex',digits=3,dep.var.labels=c('X'),
+          keep = c('Constant'),header=F,suppress.errors = T)
+```
+
+## Q4
+
+```{r}
+m4 = ivreg(formula = as.formula(paste0('Y ~ X |',paste(znames, collapse= "+"))),data=weak_sim_df)
+stargazer(m4,type='latex',digits=3,dep.var.labels=c('Y'),
+          header=F,suppress.errors = T)
+```
+
+## Q5
+
+```{r}
+m5 = ivmodel(Y=weak_sim_df$Y,
+             D=weak_sim_df$X,
+             Z=weak_sim_df %>% select(!c(Y,X)))
+AR.test(m5)
+```
